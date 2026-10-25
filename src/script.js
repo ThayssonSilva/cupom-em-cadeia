@@ -10,6 +10,8 @@ let paginaApiAtual = 1;
 let totalPaginasApi = 1;
 let carregandoMais = false;
 let timerBusca = null;
+let lojaMenuAberto = false;
+let categoriaMenuAberto = false;
 const ITENS_POR_PAGINA = 80;
 const MAX_ITENS_RENDERIZADOS = 5000;
 
@@ -414,7 +416,40 @@ function renderizarBotoesLoja(lojas) {
 
   const lojasBase = Array.isArray(lojas) ? lojas : obterLojasConfiguradas();
   const lojasUnicas = ['Todos', ...new Set([...obterLojasConfiguradas(), ...lojasBase.filter(Boolean)])];
+  const lojaAtual = lojaSelecionada === 'Todos' ? obterTexto('allStores') : lojaSelecionada;
+
   container.innerHTML = '';
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'filtro-loja-dropdown';
+
+  const botaoPrincipal = document.createElement('button');
+  botaoPrincipal.type = 'button';
+  botaoPrincipal.className = 'filtro-btn filtro-loja-ativa';
+  botaoPrincipal.textContent = lojaAtual;
+  botaoPrincipal.setAttribute('aria-label', `${obterTexto('storeLabel')}: ${lojaAtual}`);
+  botaoPrincipal.addEventListener('click', () => {
+    lojaMenuAberto = !lojaMenuAberto;
+    renderizarBotoesLoja(lojasDisponiveis);
+  });
+
+  const botaoToggle = document.createElement('button');
+  botaoToggle.type = 'button';
+  botaoToggle.className = 'filtro-btn filtro-loja-toggle';
+  botaoToggle.textContent = lojaMenuAberto ? '▴' : '▾';
+  botaoToggle.setAttribute('aria-label', lojaMenuAberto ? 'Fechar opções de loja' : 'Abrir opções de loja');
+  botaoToggle.setAttribute('aria-expanded', String(lojaMenuAberto));
+  botaoToggle.addEventListener('click', () => {
+    lojaMenuAberto = !lojaMenuAberto;
+    renderizarBotoesLoja(lojasDisponiveis);
+  });
+
+  wrapper.appendChild(botaoPrincipal);
+  wrapper.appendChild(botaoToggle);
+  container.appendChild(wrapper);
+
+  const menu = document.createElement('div');
+  menu.className = `filtro-lojas-menu ${lojaMenuAberto ? 'open' : ''}`;
 
   lojasUnicas.forEach((loja) => {
     const botao = document.createElement('button');
@@ -425,14 +460,17 @@ function renderizarBotoesLoja(lojas) {
     botao.addEventListener('click', () => {
       lojaSelecionada = loja;
       categoriaSelecionada = 'Todas';
+      lojaMenuAberto = false;
       resetarPaginacao();
       renderizarBotoesLoja(lojasDisponiveis);
       renderizarBotoesCategoria();
       renderizarOfertas();
     });
 
-    container.appendChild(botao);
+    menu.appendChild(botao);
   });
+
+  container.appendChild(menu);
 }
 
 function renderizarBotoesCategoria() {
@@ -462,7 +500,40 @@ function renderizarBotoesCategoria() {
     categoriaSelecionada = 'Todas';
   }
 
+  const categoriaAtual = categoriaSelecionada === 'Todas' ? obterTexto('allCategories') : traduzirCategoria(categoriaSelecionada);
+
   container.innerHTML = '';
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'filtro-categoria-dropdown';
+
+  const botaoPrincipal = document.createElement('button');
+  botaoPrincipal.type = 'button';
+  botaoPrincipal.className = 'filtro-btn filtro-categoria-ativa';
+  botaoPrincipal.textContent = categoriaAtual;
+  botaoPrincipal.setAttribute('aria-label', `${obterTexto('categoryLabel')}: ${categoriaAtual}`);
+  botaoPrincipal.addEventListener('click', () => {
+    categoriaMenuAberto = !categoriaMenuAberto;
+    renderizarBotoesCategoria();
+  });
+
+  const botaoToggle = document.createElement('button');
+  botaoToggle.type = 'button';
+  botaoToggle.className = 'filtro-btn filtro-categoria-toggle';
+  botaoToggle.textContent = categoriaMenuAberto ? '▴' : '▾';
+  botaoToggle.setAttribute('aria-label', categoriaMenuAberto ? 'Fechar opções de categoria' : 'Abrir opções de categoria');
+  botaoToggle.setAttribute('aria-expanded', String(categoriaMenuAberto));
+  botaoToggle.addEventListener('click', () => {
+    categoriaMenuAberto = !categoriaMenuAberto;
+    renderizarBotoesCategoria();
+  });
+
+  wrapper.appendChild(botaoPrincipal);
+  wrapper.appendChild(botaoToggle);
+  container.appendChild(wrapper);
+
+  const menu = document.createElement('div');
+  menu.className = `filtro-categorias-menu ${categoriaMenuAberto ? 'open' : ''}`;
 
   categoriasDisponiveis.forEach((categoria) => {
     const botao = document.createElement('button');
@@ -472,13 +543,16 @@ function renderizarBotoesCategoria() {
     botao.textContent = categoria === 'Todas' ? obterTexto('allCategories') : traduzirCategoria(categoria);
     botao.addEventListener('click', () => {
       categoriaSelecionada = categoria;
+      categoriaMenuAberto = false;
       resetarPaginacao();
       renderizarBotoesCategoria();
       renderizarOfertas();
     });
 
-    container.appendChild(botao);
+    menu.appendChild(botao);
   });
+
+  container.appendChild(menu);
 }
 
 function renderizarOfertas() {
