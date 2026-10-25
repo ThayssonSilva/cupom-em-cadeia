@@ -1,0 +1,32 @@
+name: Atualizar Ofertas Automaticamente
+
+on:
+  schedule:
+    # Roda a cada 1 hora (você pode alterar se quiser)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Permite que você clique em um botão para rodar manualmente quando quiser
+
+jobs:
+  rodar-robo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código do site
+        uses: actions/checkout@v3
+
+      - name: Configurar o Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Instalar dependências (axios, node-cron)
+        run: npm install
+
+      - name: Executar o Robô de Ofertas
+        run: node scraper/bot.js
+
+      - name: Salvar e atualizar o site automaticamente no GitHub
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "🤖 [Bot] Atualização automática de ofertas e cupons"
+          branch: main
+        

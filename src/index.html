@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cupom em Cadeia - As melhores ofertas e cupons</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">⚡ Cupom em Cadeia</div>
+        <p>As melhores ofertas relâmpago e cupons atualizados em tempo real.</p>
+    </header>
+
+    <main>
+        <section class="banner-whatsapp">
+            <div class="banner-conteudo">
+                <h2>🔥 Não quer perder nenhuma oferta relâmpago?</h2>
+                <p>Entre no nosso canal VIP de WhatsApp e receba os erros de preço e cupons exclusivos antes de todo mundo!</p>
+                <a href="https://wa.me/seulink" target="_blank" class="btn-whatsapp">Entrar no Grupo VIP (Grátis)</a>
+            </div>
+        </section>
+
+        <section class="filtros-area" aria-label="Filtros de ofertas">
+            <div class="campo-busca">
+                <label for="input-busca">Buscar produto</label>
+                <input id="input-busca" type="search" placeholder="Digite o nome do produto..." aria-label="Buscar produto pelo nome" />
+            </div>
+
+            <div class="filtro-lojas" id="filtro-lojas" aria-label="Filtrar por loja">
+                <button type="button" class="filtro-btn active" data-loja="Todos">Todos</button>
+            </div>
+        </section>
+
+        <section id="grid-produtos" class="grid-container">
+            <p class="carregando">Carregando ofertas fresquinhas...</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Cupom em Cadeia. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

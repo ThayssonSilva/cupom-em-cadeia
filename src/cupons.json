@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "titulo": "Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops",
+    "precoAntigo": "R$ 137,44",
+    "precoAtual": "R$ 109,95",
+    "desconto": "-20%",
+    "cupom": "OFERTA001",
+    "loja": "Fake Store",
+    "linkAfiliado": "https://example.com/Fjallraven%20-%20Foldsack%20No.%201%20Backpack%2C%20Fits%2015%20Laptops",
+    "imagem": "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_t.png"
+  },
+  {
+    "id": 2,
+    "titulo": "Mens Casual Premium Slim Fit T-Shirts ",
+    "precoAntigo": "R$ 27,88",
+    "precoAtual": "R$ 22,30",
+    "desconto": "-20%",
+    "cupom": "OFERTA002",
+    "loja": "Fake Store",
+    "linkAfiliado": "https://example.com/Mens%20Casual%20Premium%20Slim%20Fit%20T-Shirts%20",
+    "imagem": "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_t.png"
+  },
+  {
+    "id": 3,
+    "titulo": "Mens Cotton Jacket",
+    "precoAntigo": "R$ 69,99",
+    "precoAtual": "R$ 55,99",
+    "desconto": "-20%",
+    "cupom": "OFERTA003",
+    "loja": "Fake Store",
+    "linkAfiliado": "https://example.com/Mens%20Cotton%20Jacket",
+    "imagem": "https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_t.png"
+  }
+]

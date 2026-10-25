@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "titulo": "Smart TV 50'' 4K UHD LED LG (Atualizado às 22:00:00)",
+    "precoAntigo": "R$ 2.799,00",
+    "precoAtual": "R$ 2.099,00",
+    "desconto": "-25%",
+    "cupom": "SUPER25",
+    "loja": "Amazon",
+    "linkAfiliado": "https://suaurl.com/afiliado-tv"
+  },
+  {
+    "id": 2,
+    "titulo": "Fone de Ouvido Bluetooth Gamer Headset",
+    "precoAntigo": "R$ 250,00",
+    "precoAtual": "R$ 119,90",
+    "desconto": "-52%",
+    "cupom": "GAMESFORT",
+    "loja": "Shopee",
+    "linkAfiliado": "https://suaurl.com/afiliado-fone"
+  },
+  {
+    "id": 3,
+    "titulo": "Smartphone Xiaomi Redmi Note 13",
+    "precoAntigo": "R$ 1.500,00",
+    "precoAtual": "R$ 999,00",
+    "desconto": "-33%",
+    "cupom": "XIAOMIPIX",
+    "loja": "Mercado Livre",
+    "linkAfiliado": "https://suaurl.com/afiliado-celular"
+  }
+]
