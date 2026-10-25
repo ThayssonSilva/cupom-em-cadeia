@@ -17,6 +17,113 @@ function formatarMoeda(valor) {
   }).format(numero).replace(/\u00A0/g, ' ').replace(/\s{2,}/g, ' ').trim();
 }
 
+function normalizarCodigoCupom(valor) {
+  if (valor === null || valor === undefined) return '';
+
+  const texto = String(valor).trim();
+  if (!texto) return '';
+
+  const normalizado = texto.replace(/^\s*(?:cupom|coupon|code|codigo|código|voucher|promo(?:code|ção)?)\s*[:\-]?\s*/i, '').trim();
+  const reduzido = normalizado.replace(/\s+/g, ' ');
+
+  if (!reduzido) return '';
+  if (/^(promoção|promocao|oferta|teste|demo|sample|mock|placeholder|exemplo|sem\s+cupom|sem\s+codigo|nao\s+tem\s+cupom|sem\s+promoção|sem\s+promocao)$/i.test(reduzido)) {
+    return '';
+  }
+
+  return reduzido;
+}
+
+function extrairCupomValido(item = {}, loja = '') {
+  const candidatos = [
+    item?.couponCode,
+    item?.coupon,
+    item?.promotionCode,
+    item?.promoCode,
+    item?.discountCode,
+    item?.voucher,
+    item?.cupom,
+    item?.codigo,
+    item?.code,
+    item?.offerCode,
+    item?.dealCode,
+    item?.promotion?.code,
+    item?.promotion?.coupon,
+    item?.promotion?.couponCode,
+    item?.couponDetails?.code,
+    item?.couponDetails?.coupon,
+    item?.couponDetails?.couponCode,
+    Array.isArray(item?.codes) ? item.codes.find(Boolean) : null,
+    Array.isArray(item?.promotions) ? item.promotions.find((promocao) => promocao && (promocao.code || promocao.coupon || promocao.couponCode)) : null,
+    item?.campaign?.code,
+    item?.campaign?.coupon,
+    item?.store?.coupon,
+    item?.store?.couponCode,
+    item?.loja?.coupon,
+    item?.loja?.couponCode
+  ];
+
+  const codigoValido = candidatos
+    .map((valor) => {
+      if (valor && typeof valor === 'object') {
+        return normalizarCodigoCupom(valor.code || valor.coupon || valor.couponCode || valor.value || valor.id || valor.nome || valor.label);
+      }
+
+      return normalizarCodigoCupom(valor);
+    })
+    .find((valor) => Boolean(valor) && valor.toUpperCase() !== 'PROMOCAO' && valor.toUpperCase() !== 'PROMOÇÃO' && valor.toUpperCase() !== 'OFERTA');
+
+  return codigoValido || 'PROMOCAO';
+}
+
+function parseDataValidade(valor) {
+  if (!valor) return null;
+
+  if (typeof valor === 'number') {
+    return new Date(valor);
+  }
+
+  const data = new Date(valor);
+  return Number.isNaN(data.getTime()) ? null : data;
+}
+
+function removerOfertasExpiradas(ofertas = []) {
+  const lista = Array.isArray(ofertas) ? ofertas : [];
+
+  return lista.filter((item) => {
+    if (!item || item.active === false || item.ativo === false || item.expired === true || item.expirado === true || item.status === 'expired' || item.status === 'ended' || item.status === 'cancelled') {
+      return false;
+    }
+
+    const dataValidade = parseDataValidade(
+      item.validUntil || item.validity || item.expiresAt || item.expiration || item.endDate || item.dateEnd || item.validade || item.expiraEm
+    );
+
+    if (!dataValidade) {
+      return true;
+    }
+
+    return dataValidade.getTime() > Date.now();
+  });
+}
+
+function paginarLista(itens = [], paginaAtual = 1, tamanhoPagina = 80) {
+  const lista = Array.isArray(itens) ? itens : [];
+  const pagina = Math.max(1, Number(paginaAtual) || 1);
+  const tamanho = Math.max(1, Number(tamanhoPagina) || 80);
+  const limite = pagina * tamanho;
+  const paginaItens = lista.slice(0, limite);
+
+  return {
+    itens: paginaItens,
+    total: lista.length,
+    pagina,
+    tamanhoPagina: tamanho,
+    temMais: limite < lista.length,
+    totalPaginas: Math.max(1, Math.ceil(lista.length / tamanho))
+  };
+}
+
 function gerarCupom(loja = 'OFERTA', indice = 1) {
   const prefixos = {
     'Mercado Livre': 'ML',
@@ -26,6 +133,36 @@ function gerarCupom(loja = 'OFERTA', indice = 1) {
 
   const prefixo = prefixos[loja] || 'OFERTA';
   return `${prefixo}${String(indice).padStart(3, '0')}`;
+}
+
+function normalizarTextoCategoria(valor = '') {
+  return String(valor)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function inferirCategoria(item = {}, loja = '', titulo = '') {
+  const catalogo = [
+    { nome: 'Eletrônicos', palavras: ['tv', 'televisao', 'smart tv', 'celular', 'smartphone', 'notebook', 'laptop', 'tablet', 'fone', 'headphone', 'earphone', 'monitor', 'console', 'videogame', 'camera', 'câmera', 'cadeira gamer', 'mouse', 'teclado', 'speaker', 'caixa de som', 'smartwatch', 'relogio inteligente', 'airpod', 'cabo', 'carregador', 'ssd', 'processador', 'gpu', 'placa de video', 'flash drive'] },
+    { nome: 'Casa', palavras: ['mesa', 'cadeira', 'sofa', 'sofá', 'cama', 'armario', 'armário', 'utensilio', 'utensílios', 'tapete', 'luminaria', 'lampada', 'lampião', 'panela', 'vaso', 'decoracao', 'decoração', 'cortina', 'organizador', 'moveis', 'móveis', 'escrivaninha', 'jardim', 'cozinha'] },
+    { nome: 'Moda', palavras: ['camisa', 'camiseta', 'vestido', 'calca', 'jeans', 'calça', 'short', 'bermuda', 'jaqueta', 'tenis', 'sapato', 'sneaker', 'mochila', 'bolsa', 'roupa', 'acessorio de moda', 'relogio', 'pulseira', 'oculos', 'óculos', 'boné', 'blusa'] },
+    { nome: 'Acessórios', palavras: ['acessorio', 'acessórios', 'fone', 'carregador', 'case', 'capinha', 'suporte', 'adaptador', 'cabo', 'protetor', 'base', 'organizador', 'mini alto falante', 'pendrive'] },
+    { nome: 'Esporte', palavras: ['bola', 'camiseta esportiva', 'tenis esportivo', 'bicicleta', 'bike', 'raquete', 'mala esportiva', 'mochila esportiva', 'academia', 'halter', 'elastico', 'elástico', 'short esportivo', 'regata', 'agasalho esportivo', 'proteção', 'capacete', 'patins', 'skate', 'futebol', 'caminhada', 'corrida'] },
+    { nome: 'Outros', palavras: ['outros', 'geral', 'promo', 'oferta'] }
+  ];
+
+  const texto = `${titulo || item?.title || item?.name || ''} ${item?.category || item?.categoria || ''} ${item?.categories?.join(' ') || ''} ${loja || ''}`;
+  const textoNormalizado = normalizarTextoCategoria(texto);
+
+  for (const categoria of catalogo) {
+    if (categoria.palavras.some((palavra) => textoNormalizado.includes(normalizarTextoCategoria(palavra)))) {
+      return categoria.nome;
+    }
+  }
+
+  return 'Outros';
 }
 
 function normalizarOfertaMercadoLivre(item, loja = 'Mercado Livre', indice = 1) {
@@ -39,16 +176,23 @@ function normalizarOfertaMercadoLivre(item, loja = 'Mercado Livre', indice = 1) 
     ? Math.round(((precoAntigo - precoAtual) / precoAntigo) * 100)
     : 0;
 
+  const categoria = inferirCategoria(item, loja, item?.title || 'Oferta em destaque');
+  const cupom = extrairCupomValido(item, loja);
+  const expirado = Boolean(item?.expired || item?.expirado || item?.isExpired || item?.status === 'expired' || item?.status === 'ended');
+
   return {
     id: item?.id ?? `${loja}-${indice}`,
     titulo: item?.title || 'Oferta em destaque',
     precoAntigo: formatarMoeda(precoAntigo),
     precoAtual: formatarMoeda(precoAtual),
     desconto: percentualDesconto > 0 ? `-${percentualDesconto}%` : 'Oferta',
-    cupom: gerarCupom(loja, indice),
+    cupom,
     loja,
+    categoria,
     linkAfiliado: item?.permalink || item?.link || 'https://www.mercadolivre.com.br/',
-    imagem: item?.thumbnail || ''
+    imagem: item?.thumbnail || '',
+    ativo: !expirado,
+    expirado
   };
 }
 
@@ -61,26 +205,33 @@ function normalizarOfertaPublica(item, loja, indice) {
     ? Math.round(((precoAntigo - precoAtual) / precoAntigo) * 100)
     : 0;
 
+  const categoriaPadrao = inferirCategoria(item, loja, titulo);
+  const cupom = extrairCupomValido(item, loja);
+  const expirado = Boolean(item?.expired || item?.expirado || item?.isExpired || item?.status === 'expired' || item?.status === 'ended');
+
   return {
     id: item?.id ?? `${loja}-${indice}`,
     titulo,
     precoAntigo: formatarMoeda(precoAntigo),
     precoAtual: formatarMoeda(precoAtual),
     desconto: percentualDesconto > 0 ? `-${percentualDesconto}%` : 'Oferta',
-    cupom: gerarCupom(loja, indice),
+    cupom,
     loja,
+    categoria: categoriaPadrao,
     linkAfiliado: item?.permalink || item?.url || `https://example.com/${encodeURIComponent(titulo)}`,
-    imagem: item?.image || item?.thumbnail || item?.images?.[0] || ''
+    imagem: item?.image || item?.thumbnail || item?.images?.[0] || '',
+    ativo: !expirado,
+    expirado
   };
 }
 
 async function buscarOfertasMercadoLivre(query, loja = 'Mercado Livre') {
-  const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=3`;
+  const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=50`;
 
   const resposta = await axios.get(url, { timeout: 15000 });
   const itens = Array.isArray(resposta?.data?.results) ? resposta.data.results : [];
 
-  return itens.slice(0, 3).map((item, index) => 
+  return itens.map((item, index) => 
     normalizarOfertaMercadoLivre(item, loja, index + 1)
   );
 }
@@ -89,18 +240,25 @@ function getFontesAtivas() {
   const lojasAtivas = affiliateStores.filter((loja) => loja.active && loja.publicUrl);
 
   if (lojasAtivas.length > 0) {
-    return lojasAtivas.map((loja) => ({
-      url: loja.publicUrl,
-      loja: loja.name,
-      affiliate: loja,
-      normalizar: (item, indice) => {
-        const ofertaPublica = normalizarOfertaPublica(item, loja.name, indice);
-        return {
-          ...ofertaPublica,
-          linkAfiliado: buildAffiliateLink(ofertaPublica.linkAfiliado, loja) || ofertaPublica.linkAfiliado
-        };
-      }
-    }));
+    return lojasAtivas.flatMap((loja) => {
+      const queries = Array.isArray(loja.searchQueries) && loja.searchQueries.length > 0
+        ? loja.searchQueries
+        : [loja.name];
+
+      return queries.map((query) => ({
+        url: loja.publicUrl,
+        loja: loja.name,
+        affiliate: loja,
+        query,
+        normalizar: (item, indice) => {
+          const ofertaPublica = normalizarOfertaPublica(item, loja.name, indice);
+          return {
+            ...ofertaPublica,
+            linkAfiliado: buildAffiliateLink(ofertaPublica.linkAfiliado, loja) || ofertaPublica.linkAfiliado
+          };
+        }
+      }));
+    });
   }
 
   return demoSources.map((fonte) => ({
@@ -110,8 +268,22 @@ function getFontesAtivas() {
   }));
 }
 
+function extrairDadosResposta(resposta) {
+  const dados = resposta?.data;
+
+  if (Array.isArray(dados)) return dados;
+  if (Array.isArray(dados?.products)) return dados.products;
+  if (Array.isArray(dados?.results)) return dados.results;
+  if (Array.isArray(dados?.items)) return dados.items;
+  if (Array.isArray(dados?.offers)) return dados.offers;
+  if (Array.isArray(dados?.data)) return dados.data;
+
+  return [];
+}
+
 async function buscarOfertasDaInternet() {
   const fontes = getFontesAtivas();
+  const ofertasColetadas = [];
 
   for (const fonte of fontes) {
     try {
@@ -123,16 +295,17 @@ async function buscarOfertasDaInternet() {
         }
       });
 
-      const dados = Array.isArray(resposta.data) ? resposta.data : Array.isArray(resposta.data?.products) ? resposta.data.products : [];
+      const dados = extrairDadosResposta(resposta);
       if (!dados.length) continue;
 
-      return dados.slice(0, 3).map((item, index) => fonte.normalizar(item, index + 1));
+      const ofertasNormalizadas = dados.map((item, index) => fonte.normalizar(item, index + 1));
+      ofertasColetadas.push(...ofertasNormalizadas);
     } catch (error) {
       console.warn(`⚠️ [Robô] Fonte falhou: ${fonte.url} -> ${error.message}`);
     }
   }
 
-  return [];
+  return ofertasColetadas;
 }
 
 async function buscarOfertasAtualizadas() {
@@ -140,42 +313,20 @@ async function buscarOfertasAtualizadas() {
 
   try {
     const ofertasAtualizadas = await buscarOfertasDaInternet();
+    const ofertasAtivas = removerOfertasExpiradas(ofertasAtualizadas);
 
-    if (!ofertasAtualizadas.length) {
-      const fallback = [
-        {
-          id: 1,
-          titulo: 'Notebook Gamer 15.6',
-          precoAntigo: 'R$ 4.299,00',
-          precoAtual: 'R$ 3.599,00',
-          desconto: '-16%',
-          cupom: 'FALLBACK16',
-          loja: 'Loja Oficial',
-          linkAfiliado: 'https://example.com/fallback-notebook'
-        },
-        {
-          id: 2,
-          titulo: 'Smart TV 50" 4K',
-          precoAntigo: 'R$ 2.799,00',
-          precoAtual: 'R$ 2.199,00',
-          desconto: '-21%',
-          cupom: 'FALLBACK21',
-          loja: 'Loja Oficial',
-          linkAfiliado: 'https://example.com/fallback-tv'
-        }
-      ];
-
+    if (!ofertasAtivas.length) {
       const caminhoArquivo = path.join(__dirname, '../src/cupons.json');
-      fs.writeFileSync(caminhoArquivo, JSON.stringify(fallback, null, 2), 'utf-8');
-      console.log('✅ [Robô] Usando fallback local porque as fontes públicas não responderam.');
-      return fallback;
+      fs.writeFileSync(caminhoArquivo, JSON.stringify([], null, 2), 'utf-8');
+      console.log('✅ [Robô] Nenhuma oferta ativa foi encontrada nas fontes públicas. Arquivo limpo.');
+      return [];
     }
 
     const caminhoArquivo = path.join(__dirname, '../src/cupons.json');
-    fs.writeFileSync(caminhoArquivo, JSON.stringify(ofertasAtualizadas.slice(0, 9), null, 2), 'utf-8');
+    fs.writeFileSync(caminhoArquivo, JSON.stringify(ofertasAtivas, null, 2), 'utf-8');
 
-    console.log(`✅ [Robô] ${ofertasAtualizadas.length} ofertas atualizadas e salvas em 'src/cupons.json'!`);
-    return ofertasAtualizadas.slice(0, 9);
+    console.log(`✅ [Robô] ${ofertasAtivas.length} ofertas ativas atualizadas e salvas em 'src/cupons.json'!`);
+    return ofertasAtivas;
   } catch (error) {
     console.error('❌ [Robô] Erro ao buscar ofertas:', error.message);
     return [];
@@ -193,7 +344,13 @@ if (require.main === module) {
 
 module.exports = {
   formatarMoeda,
+  normalizarCodigoCupom,
+  extrairCupomValido,
+  removerOfertasExpiradas,
+  paginarLista,
   normalizarOfertaMercadoLivre,
+  normalizarOfertaPublica,
+  inferirCategoria,
   buscarOfertasMercadoLivre,
   buscarOfertasAtualizadas
 };

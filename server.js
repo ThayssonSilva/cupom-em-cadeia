@@ -5,6 +5,29 @@ const path = require('path');
 const port = process.env.PORT || 3000;
 const rootDir = path.join(__dirname, 'src');
 const ofertasPath = path.join(rootDir, 'cupons.json');
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 80;
+const MAX_LIMIT = 500;
+
+function paginarOfertas(ofertas, paginaSolicitada, limiteSolicitado) {
+  const lista = Array.isArray(ofertas) ? ofertas : [];
+  const pagina = Math.max(1, Number(paginaSolicitada) || DEFAULT_PAGE);
+  const limite = Math.min(Math.max(1, Number(limiteSolicitado) || DEFAULT_LIMIT), MAX_LIMIT);
+  const total = lista.length;
+  const totalPaginas = Math.max(1, Math.ceil(total / limite));
+  const paginaCorreta = Math.min(pagina, totalPaginas);
+  const inicio = (paginaCorreta - 1) * limite;
+  const itens = lista.slice(inicio, inicio + limite);
+
+  return {
+    items: itens,
+    page: paginaCorreta,
+    limit: limite,
+    total,
+    totalPages: totalPaginas,
+    hasMore: inicio + limite < total
+  };
+}
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -60,7 +83,10 @@ const server = http.createServer((req, res) => {
 
       try {
         const ofertas = JSON.parse(data);
-        sendJson(res, 200, ofertas);
+        const pagina = Number(url.searchParams.get('page')) || DEFAULT_PAGE;
+        const limite = Number(url.searchParams.get('limit')) || DEFAULT_LIMIT;
+        const paginacao = paginarOfertas(ofertas, pagina, limite);
+        sendJson(res, 200, paginacao);
       } catch (error) {
         sendJson(res, 500, { erro: 'Arquivo de ofertas inválido.' });
       }

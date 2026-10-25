@@ -8,27 +8,48 @@
 </head>
 <body>
     <header>
-        <div class="logo">⚡ Cupom em Cadeia</div>
-        <p>As melhores ofertas relâmpago e cupons atualizados em tempo real.</p>
+        <div class="header-inner">
+            <div class="logo-wrap">
+                <div class="logo">⚡ Cupom em Cadeia</div>
+                <p id="header-subtitle">As melhores ofertas relâmpago e cupons atualizados em tempo real.</p>
+            </div>
+
+            <div class="lang-selector-wrap">
+                <label for="language-select" class="lang-label">Idioma</label>
+                <select id="language-select" aria-label="Selecionar idioma">
+                    <option value="pt-BR">🇧🇷 Português (Brasil)</option>
+                    <option value="en-US">🇺🇸 English (US)</option>
+                    <option value="es-ES">🇪🇸 Español (España)</option>
+                    <option value="fr-FR">🇫🇷 Français (France)</option>
+                    <option value="de-DE">🇩🇪 Deutsch (Deutschland)</option>
+                    <option value="it-IT">🇮🇹 Italiano (Italia)</option>
+                    <option value="ar-SA">🇸🇦 العربية (السعودية)</option>
+                    <option value="ja-JP">🇯🇵 日本語 (日本)</option>
+                    <option value="ko-KR">🇰🇷 한국어 (대한민국)</option>
+                </select>
+            </div>
+        </div>
     </header>
 
     <main>
-        <section class="banner-whatsapp">
-            <div class="banner-conteudo">
-                <h2>🔥 Não quer perder nenhuma oferta relâmpago?</h2>
-                <p>Entre no nosso canal VIP de WhatsApp e receba os erros de preço e cupons exclusivos antes de todo mundo!</p>
-                <a href="https://wa.me/seulink" target="_blank" class="btn-whatsapp">Entrar no Grupo VIP (Grátis)</a>
-            </div>
-        </section>
-
         <section class="filtros-area" aria-label="Filtros de ofertas">
             <div class="campo-busca">
                 <label for="input-busca">Buscar produto</label>
                 <input id="input-busca" type="search" placeholder="Digite o nome do produto..." aria-label="Buscar produto pelo nome" />
             </div>
 
-            <div class="filtro-lojas" id="filtro-lojas" aria-label="Filtrar por loja">
-                <button type="button" class="filtro-btn active" data-loja="Todos">Todos</button>
+            <div class="filtro-grupo">
+                <span class="filtro-titulo">Loja</span>
+                <div class="filtro-lojas" id="filtro-lojas" aria-label="Filtrar por loja">
+                    <button type="button" class="filtro-btn active" data-loja="Todos">Todos</button>
+                </div>
+            </div>
+
+            <div class="filtro-grupo">
+                <span class="filtro-titulo">Categoria</span>
+                <div class="filtro-categorias" id="filtro-categorias" aria-label="Filtrar por categoria">
+                    <button type="button" class="filtro-btn active" data-categoria="Todas">Todas</button>
+                </div>
             </div>
         </section>
 
@@ -41,6 +62,20 @@
         <p>&copy; 2026 Cupom em Cadeia. Todos os direitos reservados.</p>
     </footer>
 
+    <div class="whatsapp-float" aria-live="polite">
+        <button type="button" class="whatsapp-toggle" aria-label="Abrir mensagem do WhatsApp" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.52 3.48A11.86 11.86 0 0 0 12 0C5.37 0 .05 5.32.05 11.95c0 2.11.55 4.17 1.6 5.98L0 24l6.3-1.65A11.93 11.93 0 0 0 12 23.9c6.63 0 12-5.32 12-11.95 0-3.18-1.24-6.17-3.48-8.47ZM12 21.8c-1.9 0-3.74-.5-5.35-1.46l-.38-.22-3.73.98 1-3.63-.25-.4A9.87 9.87 0 0 1 2.16 11.95c0-5.47 4.46-9.93 9.84-9.93A9.87 9.87 0 0 1 21.84 12c0 5.47-4.46 9.8-9.84 9.8Zm5.4-7.3c-.29-.15-1.72-.85-1.99-.94-.27-.1-.46-.15-.66.15-.2.3-.77.94-.95 1.13-.17.2-.35.22-.64.08-.29-.15-1.22-.45-2.32-1.43-.86-.76-1.44-1.7-1.61-1.98-.17-.29-.02-.45.13-.59.13-.13.29-.35.44-.52.15-.17.19-.3.29-.5.1-.2.05-.38-.03-.53-.08-.15-.66-1.6-.91-2.19-.24-.58-.49-.5-.66-.5h-.57c-.19 0-.5.07-.76.35-.26.29-1 .98-1 2.39 0 1.4 1.03 2.77 1.17 2.96.15.2 2.02 3.09 4.88 4.33.68.29 1.22.46 1.63.59.68.22 1.3.19 1.79.12.54-.08 1.72-.7 1.96-1.38.24-.67.24-1.25.17-1.38-.07-.13-.26-.2-.55-.35Z"/>
+            </svg>
+        </button>
+
+        <div class="whatsapp-mensagem" id="whatsapp-mensagem">
+            <p>🔥 Não quer perder nenhuma oferta relâmpago?</p>
+            <a href="https://wa.me/seulink" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">Entrar na Comunidade de Ofertas (Grátis)</a>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
