@@ -94,9 +94,10 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const isImagemPublica = url.pathname.startsWith('/img/');
+  const isImagemPublica = url.pathname.startsWith('/img/') || url.pathname.startsWith('/imagem/');
   const baseDir = isImagemPublica ? __dirname : rootDir;
-  let filePath = path.join(baseDir, url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\/+/, ''));
+  const relativePath = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\/+/, '');
+  let filePath = path.join(baseDir, relativePath);
   const resolvedFilePath = path.resolve(filePath);
   const allowedRoot = path.resolve(baseDir);
 
