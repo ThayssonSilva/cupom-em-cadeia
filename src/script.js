@@ -46,6 +46,7 @@ const traducoes = {
     copy: 'Copiar',
     coupon: 'Cupom',
     resgatar: 'Resgatar Oferta',
+    fallbackLink: 'Link ajustado automaticamente',
     footer: 'Todos os direitos reservados.',
     whatsappText: '🔥 Não quer perder nenhuma oferta relâmpago?',
     whatsappButton: 'Entrar na Comunidade de Ofertas (Grátis)',
@@ -68,6 +69,7 @@ const traducoes = {
     copy: 'Copy',
     coupon: 'Coupon',
     resgatar: 'Redeem Offer',
+    fallbackLink: 'Link adjusted automatically',
     footer: 'All rights reserved.',
     whatsappText: '🔥 Don’t want to miss a flash deal?',
     whatsappButton: 'Join the Offer Community (Free)',
@@ -394,6 +396,112 @@ function normalizarTexto(valor = '') {
     .trim();
 }
 
+function obterLinkBuscaPorLoja(loja = '', titulo = '') {
+  const termo = encodeURIComponent(String(titulo || '').trim());
+  const lojaNormalizada = normalizarTexto(loja);
+
+  if (lojaNormalizada.includes('amazon')) {
+    return `https://www.amazon.com.br/s?k=${termo}`;
+  }
+
+  if (lojaNormalizada.includes('mercado livre')) {
+    return `https://lista.mercadolivre.com.br/${termo}`;
+  }
+
+  if (lojaNormalizada.includes('shopee')) {
+    return `https://shopee.com.br/search?keyword=${termo}`;
+  }
+
+  if (lojaNormalizada.includes('magazine luiza')) {
+    return `https://www.magazineluiza.com.br/busca/${termo}/`;
+  }
+
+  if (lojaNormalizada.includes('casas bahia')) {
+    return `https://www.casasbahia.com.br/busca/${termo}/`;
+  }
+
+  if (lojaNormalizada.includes('aliexpress')) {
+    return `https://pt.aliexpress.com/wholesale?SearchText=${termo}`;
+  }
+
+  return 'https://www.google.com/search?q=' + termo;
+}
+
+function obterConfigLoja(loja = '') {
+  if (!Array.isArray(window.affiliateStores)) {
+    return null;
+  }
+
+  const lojaNormalizada = normalizarTexto(loja);
+  return window.affiliateStores.find((store) => normalizarTexto(store?.name) === lojaNormalizada) || null;
+}
+
+function tagAfiliadoValida(tag = '') {
+  const valor = String(tag || '').trim();
+  if (!valor) return false;
+  return !/^SEU_ID_/i.test(valor);
+}
+
+function aplicarTagAfiliado(link = '', loja = '') {
+  if (!link) return link;
+
+  const configLoja = obterConfigLoja(loja);
+  if (!configLoja || configLoja.active === false) {
+    return link;
+  }
+
+  const tag = String(configLoja.affiliateTag || '').trim();
+  const parametro = String(configLoja.affiliateParam || '').trim();
+
+  if (!parametro || !tagAfiliadoValida(tag)) {
+    return link;
+  }
+
+  try {
+    const url = new URL(link);
+    url.searchParams.set(parametro, tag);
+    return url.toString();
+  } catch {
+    return link;
+  }
+}
+
+function construirLinkResgate(item = {}) {
+  const urlBruta = String(item.linkAfiliado || '').trim();
+  const loja = item.loja || '';
+  const titulo = item.titulo || '';
+  const linkFallback = aplicarTagAfiliado(obterLinkBuscaPorLoja(loja, titulo), loja);
+
+  if (!urlBruta) {
+    return { url: linkFallback, fallbackAplicado: true };
+  }
+
+  const urlComProtocolo = urlBruta.startsWith('//')
+    ? `https:${urlBruta}`
+    : (/^www\./i.test(urlBruta) ? `https://${urlBruta}` : urlBruta);
+
+  try {
+    const url = new URL(urlComProtocolo);
+    const protocoloValido = url.protocol === 'http:' || url.protocol === 'https:';
+
+    if (!protocoloValido) {
+      return { url: linkFallback, fallbackAplicado: true };
+    }
+
+    const host = url.hostname.toLowerCase();
+    const lojaAmazon = normalizarTexto(loja).includes('amazon');
+    const amazonValido = host.includes('amazon.') || host === 'amzn.to' || host.endsWith('.amzn.to');
+
+    if (lojaAmazon && !amazonValido) {
+      return { url: linkFallback, fallbackAplicado: true };
+    }
+
+    return { url: aplicarTagAfiliado(url.toString(), loja), fallbackAplicado: false };
+  } catch {
+    return { url: linkFallback, fallbackAplicado: true };
+  }
+}
+
 function filtrarOfertas() {
   const busca = normalizarTexto(termoBusca);
 
@@ -576,6 +684,7 @@ function renderizarOfertas() {
   ofertasVisiveis.forEach((item) => {
     const card = document.createElement('article');
     card.className = 'card-produto';
+    const { url: linkResgate, fallbackAplicado } = construirLinkResgate(item);
 
     const imagem = item.imagem
       ? `<img class="produto-imagem" src="${item.imagem}" alt="${item.titulo || 'Oferta'}" loading="lazy" />`
@@ -588,6 +697,9 @@ function renderizarOfertas() {
     const botaoCupom = possuiCupomReal
       ? `<button type="button" class="copiar-cupom" data-cupom="${item.cupom}">${obterTexto('copy')}</button>`
       : '';
+    const avisoFallback = fallbackAplicado
+      ? `<span class="link-seguro-badge" title="${obterTexto('fallbackLink')}">${obterTexto('fallbackLink')}</span>`
+      : '';
 
     card.innerHTML = `
       <div class="produto-imagem-wrap">
@@ -596,6 +708,7 @@ function renderizarOfertas() {
 
       <div>
         <span class="loja-badge">${item.loja}</span>
+        ${avisoFallback}
         <h3>${item.titulo}</h3>
       </div>
 
@@ -612,7 +725,7 @@ function renderizarOfertas() {
         ${botaoCupom}
       </div>
 
-      <a href="${item.linkAfiliado}" target="_blank" rel="noopener noreferrer" class="btn-resgatar">${obterTexto('resgatar')}</a>
+      <a href="${linkResgate}" target="_blank" rel="noopener noreferrer" class="btn-resgatar">${obterTexto('resgatar')}</a>
     `;
 
     const botaoCopiar = card.querySelector('.copiar-cupom');
