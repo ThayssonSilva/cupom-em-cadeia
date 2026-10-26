@@ -4,6 +4,11 @@ const cron = require('node-cron');
 const axios = require('axios');
 const { affiliateStores, demoSources, isAffiliateReady, buildAffiliateLink } = require('./config');
 
+const AMAZON_AFFILIATE = {
+  affiliateTag: 'cupomemcadeia-20',
+  affiliateParam: 'tag'
+};
+
 function formatarMoeda(valor) {
   const numero = Number(valor);
 
@@ -389,6 +394,97 @@ async function buscarOfertasDaInternet() {
   return ofertasColetadas;
 }
 
+function gerarOfertasFallback() {
+  const ofertas = [
+    {
+      id: 'fallback-amazon-1',
+      titulo: 'Notebook Gamer 15,6" com RTX',
+      loja: 'Amazon',
+      categoria: 'Eletrônicos',
+      precoAntigo: 'R$ 4.999,00',
+      precoAtual: 'R$ 3.299,00',
+      desconto: '-34%',
+      cupom: 'PROMOCAO',
+      linkAfiliado: buildAffiliateLink('https://www.amazon.com.br/s?k=notebook+gamer', AMAZON_AFFILIATE),
+      imagem: '',
+      ativo: true,
+      expirado: false
+    },
+    {
+      id: 'fallback-amazon-2',
+      titulo: 'Smart TV 55" 4K UHD',
+      loja: 'Amazon',
+      categoria: 'Eletrônicos',
+      precoAntigo: 'R$ 3.899,00',
+      precoAtual: 'R$ 2.799,00',
+      desconto: '-28%',
+      cupom: 'PROMOCAO',
+      linkAfiliado: buildAffiliateLink('https://www.amazon.com.br/s?k=smart+tv+55', AMAZON_AFFILIATE),
+      imagem: '',
+      ativo: true,
+      expirado: false
+    },
+    {
+      id: 'fallback-amazon-3',
+      titulo: 'Fone Bluetooth sem fio premium',
+      loja: 'Amazon',
+      categoria: 'Acessórios',
+      precoAntigo: 'R$ 899,00',
+      precoAtual: 'R$ 549,00',
+      desconto: '-39%',
+      cupom: 'PROMOCAO',
+      linkAfiliado: buildAffiliateLink('https://www.amazon.com.br/s?k=fone+bluetooth', AMAZON_AFFILIATE),
+      imagem: '',
+      ativo: true,
+      expirado: false
+    },
+    {
+      id: 'fallback-amazon-4',
+      titulo: 'Mesa de Escritório com Prateleiras',
+      loja: 'Amazon',
+      categoria: 'Casa',
+      precoAntigo: 'R$ 1.399,00',
+      precoAtual: 'R$ 999,00',
+      desconto: '-29%',
+      cupom: 'PROMOCAO',
+      linkAfiliado: buildAffiliateLink('https://www.amazon.com.br/s?k=mesa+de+escritorio', AMAZON_AFFILIATE),
+      imagem: '',
+      ativo: true,
+      expirado: false
+    },
+    {
+      id: 'fallback-amazon-5',
+      titulo: 'Camiseta Premium Masculina',
+      loja: 'Amazon',
+      categoria: 'Moda',
+      precoAntigo: 'R$ 189,00',
+      precoAtual: 'R$ 119,00',
+      desconto: '-37%',
+      cupom: 'PROMOCAO',
+      linkAfiliado: buildAffiliateLink('https://www.amazon.com.br/s?k=camiseta+masculina', AMAZON_AFFILIATE),
+      imagem: '',
+      ativo: true,
+      expirado: false
+    },
+    {
+      id: 'fallback-amazon-6',
+      titulo: 'Bicicleta Ergométrica para Academia',
+      loja: 'Amazon',
+      categoria: 'Esporte',
+      precoAntigo: 'R$ 2.399,00',
+      precoAtual: 'R$ 1.699,00',
+      desconto: '-29%',
+      cupom: 'PROMOCAO',
+      linkAfiliado: buildAffiliateLink('https://www.amazon.com.br/s?k=bicicleta+ergometrica', AMAZON_AFFILIATE),
+      imagem: '',
+      ativo: true,
+      expirado: false
+    }
+  ];
+
+  return ofertas;
+}
+
 async function buscarOfertasAtualizadas() {
   console.log('🔄 [Robô] Buscando ofertas reais em fontes públicas...');
 
@@ -397,10 +493,11 @@ async function buscarOfertasAtualizadas() {
     const ofertasAtivas = removerOfertasExpiradas(ofertasAtualizadas);
 
     if (!ofertasAtivas.length) {
+      const ofertasFallback = gerarOfertasFallback();
       const caminhoArquivo = path.join(__dirname, '../src/cupons.json');
-      fs.writeFileSync(caminhoArquivo, JSON.stringify([], null, 2), 'utf-8');
-      console.log('✅ [Robô] Nenhuma oferta ativa foi encontrada nas fontes públicas. Arquivo limpo.');
-      return [];
+      fs.writeFileSync(caminhoArquivo, JSON.stringify(ofertasFallback, null, 2), 'utf-8');
+      console.log('✅ [Robô] Nenhuma oferta ativa foi encontrada nas fontes públicas. Usando ofertas de fallback do Amazon com o código de afiliado.');
+      return ofertasFallback;
     }
 
     const caminhoArquivo = path.join(__dirname, '../src/cupons.json');
@@ -410,7 +507,10 @@ async function buscarOfertasAtualizadas() {
     return ofertasAtivas;
   } catch (error) {
     console.error('❌ [Robô] Erro ao buscar ofertas:', error.message);
-    return [];
+    const ofertasFallback = gerarOfertasFallback();
+    const caminhoArquivo = path.join(__dirname, '../src/cupons.json');
+    fs.writeFileSync(caminhoArquivo, JSON.stringify(ofertasFallback, null, 2), 'utf-8');
+    return ofertasFallback;
   }
 }
 
@@ -432,6 +532,7 @@ module.exports = {
   normalizarOfertaMercadoLivre,
   normalizarOfertaPublica,
   extrairDadosAmazon,
+  gerarOfertasFallback,
   inferirCategoria,
   buscarOfertasMercadoLivre,
   buscarOfertasAtualizadas

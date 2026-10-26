@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { normalizarOfertaMercadoLivre, inferirCategoria, paginarLista, extrairCupomValido, removerOfertasExpiradas, extrairDadosAmazon } = require('./bot.js');
+const { normalizarOfertaMercadoLivre, inferirCategoria, paginarLista, extrairCupomValido, removerOfertasExpiradas, extrairDadosAmazon, gerarOfertasFallback } = require('./bot.js');
 
 test('paginarLista divide grandes listas em lotes sem perder itens', () => {
   const itens = Array.from({ length: 250 }, (_, index) => ({ id: index + 1 }));
@@ -80,4 +80,14 @@ test('extrairDadosAmazon monta itens a partir do HTML de busca da Amazon', () =>
   assert.equal(itens[0].title, 'Notebook Gamer 15,6');
   assert.equal(itens[1].title, 'Fone Bluetooth');
   assert.ok(itens[0].price > 0);
+});
+
+test('gerarOfertasFallback cria ofertas locais quando as fontes externas forem bloqueadas', () => {
+  const ofertas = gerarOfertasFallback();
+
+  assert.ok(Array.isArray(ofertas));
+  assert.ok(ofertas.length > 0);
+  assert.equal(ofertas[0].loja, 'Amazon');
+  assert.ok(ofertas[0].linkAfiliado.includes('tag=cupomemcadeia-20'));
+  assert.ok(ofertas.some((item) => item.categoria === 'Eletrônicos'));
 });
