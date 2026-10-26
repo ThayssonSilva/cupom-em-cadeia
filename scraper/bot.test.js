@@ -82,13 +82,12 @@ test('extrairDadosAmazon monta itens a partir do HTML de busca da Amazon', () =>
   assert.ok(itens[0].price > 0);
 });
 
-test('gerarOfertasFallback cria ofertas locais quando as fontes externas forem bloqueadas', () => {
+test('gerarOfertasFallback retorna apenas o produto do link informado', () => {
   const ofertas = gerarOfertasFallback();
 
   assert.ok(Array.isArray(ofertas));
-  assert.ok(ofertas.length > 0);
+  assert.equal(ofertas.length, 1);
   assert.equal(ofertas[0].loja, 'Amazon');
-  assert.ok(ofertas.some((item) => item.linkAfiliado.includes('tag=cupomemcadeia-20')));
-  assert.ok(ofertas.some((item) => item.categoria === 'Eletrônicos'));
-  assert.ok(ofertas.some((item) => item.linkAfiliado === 'https://link.amazon/B0fARIO14'));
+  assert.equal(ofertas[0].linkAfiliado, 'https://link.amazon/B0fARIO14');
+  assert.equal(ofertas[0].categoria, 'Eletrônicos');
 });
