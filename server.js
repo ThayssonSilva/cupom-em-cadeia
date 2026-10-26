@@ -94,9 +94,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let filePath = path.join(rootDir, url.pathname === '/' ? 'index.html' : url.pathname);
+  const isImagemPublica = url.pathname.startsWith('/img/');
+  const baseDir = isImagemPublica ? __dirname : rootDir;
+  let filePath = path.join(baseDir, url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\/+/, ''));
+  const resolvedFilePath = path.resolve(filePath);
+  const allowedRoot = path.resolve(baseDir);
 
-  if (!filePath.startsWith(rootDir)) {
+  if (!resolvedFilePath.startsWith(allowedRoot)) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Acesso negado');
     return;
