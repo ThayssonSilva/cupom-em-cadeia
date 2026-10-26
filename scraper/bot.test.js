@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { normalizarOfertaMercadoLivre, inferirCategoria, paginarLista, extrairCupomValido, removerOfertasExpiradas } = require('./bot.js');
+const { normalizarOfertaMercadoLivre, inferirCategoria, paginarLista, extrairCupomValido, removerOfertasExpiradas, extrairDadosAmazon } = require('./bot.js');
 
 test('paginarLista divide grandes listas em lotes sem perder itens', () => {
   const itens = Array.from({ length: 250 }, (_, index) => ({ id: index + 1 }));
@@ -59,4 +59,25 @@ test('inferirCategoria identifica categorias por palavras-chave do produto', () 
   assert.equal(inferirCategoria({ title: 'Camiseta masculina premium' }, 'Amazon'), 'Moda');
   assert.equal(inferirCategoria({ title: 'Mesa de escritório' }, 'Casas Bahia'), 'Casa');
   assert.equal(inferirCategoria({ title: 'Kit de acessórios para carro' }, 'Mercado Livre'), 'Acessórios');
+});
+
+test('extrairDadosAmazon monta itens a partir do HTML de busca da Amazon', () => {
+  const html = `
+    <div data-asin="B0ABC123" class="s-result-item">
+      <h2><a href="/gp/product/B0ABC123">Notebook Gamer 15,6</a></h2>
+      <span class="a-price-whole">2.899</span><span class="a-price-fraction">99</span>
+    </div>
+    <div data-asin="B0XYZ999" class="s-result-item">
+      <h2><a href="/gp/product/B0XYZ999">Fone Bluetooth</a></h2>
+      <span class="a-price-whole">599</span><span class="a-price-fraction">00</span>
+    </div>
+  `;
+
+  const itens = extrairDadosAmazon(html);
+
+  assert.equal(itens.length, 2);
+  assert.equal(itens[0].id, 'B0ABC123');
+  assert.equal(itens[0].title, 'Notebook Gamer 15,6');
+  assert.equal(itens[1].title, 'Fone Bluetooth');
+  assert.ok(itens[0].price > 0);
 });

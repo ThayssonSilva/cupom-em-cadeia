@@ -165,6 +165,81 @@ function inferirCategoria(item = {}, loja = '', titulo = '') {
   return 'Outros';
 }
 
+function removerTagsHtml(valor = '') {
+  return String(valor || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extrairPrecoAmazon(snippet = '') {
+  const precoEmTexto = snippet.match(/<span class="a-price-whole">\s*([^<]+)\s*<\/span>/i)?.[1] || '';
+  const centavos = snippet.match(/<span class="a-price-fraction">\s*([^<]+)\s*<\/span>/i)?.[1] || '00';
+  const precoFormatado = `${precoEmTexto.replace(/[^\d,\.]/g, '').replace('.', ',')}${centavos ? `,${centavos.replace(/[^\d]/g, '')}` : ''}`;
+
+  const numero = Number(precoFormatado.replace('.', '').replace(',', '.').replace(/[^\d.]/g, ''));
+  if (!Number.isFinite(numero)) {
+    return 0;
+  }
+
+  return numero;
+}
+
+function extrairDadosAmazon(html = '') {
+  if (!html) return [];
+
+  const itens = [...html.matchAll(/data-asin="([^"]+)"/g)];
+  const vistos = new Set();
+  const ofertas = [];
+
+  for (let index = 0; index < itens.length; index += 1) {
+    const match = itens[index];
+    const asin = match[1];
+    if (!asin || vistos.has(asin)) continue;
+    vistos.add(asin);
+
+    const inicio = match.index || 0;
+    const proximoInicio = itens[index + 1]?.index || html.length;
+    const trecho = html.slice(inicio, proximoInicio);
+
+    const linkMatch = trecho.match(/href="(https?:\/\/www\.amazon\.com\.br\/[^"#?]+(?:\?[^"#]+)?)"/i)
+      || trecho.match(/href="((?:\/[^"#?]+)+(?:\?[^"#]+)?)"/i);
+    const tituloMatch = trecho.match(/<h2[^>]*>\s*([\s\S]*?)<\/h2>/i)
+      || trecho.match(/aria-label="([^"]+)"/i)
+      || trecho.match(/title="([^"]+)"/i);
+    const imagemMatch = trecho.match(/src="(https?:\/\/[^"\s]+\.(?:jpg|jpeg|png|webp|avif)[^"\s]*)"/i);
+
+    const titulo = removerTagsHtml(tituloMatch?.[1] || 'Produto Amazon');
+    const link = linkMatch
+      ? (linkMatch[1].startsWith('http') ? linkMatch[1] : `https://www.amazon.com.br${linkMatch[1]}`)
+      : 'https://www.amazon.com.br/s?k=notebook+gamer';
+    const precoAtual = extrairPrecoAmazon(trecho);
+
+    if (!titulo || titulo.length < 3) continue;
+
+    ofertas.push({
+      id: asin,
+      title: titulo,
+      name: titulo,
+      price: precoAtual,
+      original_price: precoAtual,
+      url: link,
+      link: link,
+      permalink: link,
+      thumbnail: imagemMatch?.[1] || '',
+      image: imagemMatch?.[1] || '',
+      images: imagemMatch?.[1] ? [imagemMatch[1]] : [],
+      category: 'Eletrônicos'
+    });
+  }
+
+  return ofertas;
+}
+
 function normalizarOfertaMercadoLivre(item, loja = 'Mercado Livre', indice = 1) {
   const valorAtual = Number(item?.price ?? item?.price_amount ?? 0);
   const valorAntigo = Number(item?.original_price ?? item?.base_price ?? valorAtual);
@@ -288,14 +363,20 @@ async function buscarOfertasDaInternet() {
   for (const fonte of fontes) {
     try {
       const resposta = await axios.get(fonte.url, {
-        timeout: 15000,
+        timeout: 30000,
         headers: {
-          'User-Agent': 'Mozilla/5.0',
-          Accept: 'application/json'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+          Accept: 'application/json, text/html, */*',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
         }
       });
 
-      const dados = extrairDadosResposta(resposta);
+      let dados = extrairDadosResposta(resposta);
+
+      if (!dados.length && fonte.loja === 'Amazon') {
+        dados = extrairDadosAmazon(resposta.data || '');
+      }
+
       if (!dados.length) continue;
 
       const ofertasNormalizadas = dados.map((item, index) => fonte.normalizar(item, index + 1));
@@ -350,6 +431,7 @@ module.exports = {
   paginarLista,
   normalizarOfertaMercadoLivre,
   normalizarOfertaPublica,
+  extrairDadosAmazon,
   inferirCategoria,
   buscarOfertasMercadoLivre,
   buscarOfertasAtualizadas
