@@ -14,3 +14,20 @@
     "expirado": false
   }
 ]
+
+[
+  {
+    "id": "fallback-amazon-link-embutido",
+    "titulo": "Robô Aspirador Inteligente Wi-Fi Kuanttum X10 Cor Preto 220V Integra Alexa Robot Vacuum MOP Passa Pano Mapeamento LDS 360 (Preto)",
+    "loja": "Amazon",
+    "categoria": "Eletrônicos",
+    "precoAntigo": "R$ 1.499,90",
+    "precoAtual": "R$ 891,21",
+    "desconto": "-40%",
+    "cupom": "COMPRANOAPP",
+    "linkAfiliado": "https://link.amazon/B08LqY9HX",
+    "imagem": "https://a.co/d/0ig5LNnf",
+    "ativo": true,
+    "expirado": false
+  }
+]
