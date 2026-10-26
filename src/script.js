@@ -582,7 +582,9 @@ function renderizarOfertas() {
       : '<div class="produto-sem-imagem">Oferta</div>';
 
     const possuiCupomReal = Boolean(item.cupom) && item.cupom !== 'PROMOCAO';
-    const textoCupom = possuiCupomReal ? `${obterTexto('coupon')}: <strong>${item.cupom}</strong>` : '<strong>Promoção ativa</strong>';
+    const textoCupom = possuiCupomReal
+      ? `${obterTexto('coupon')}: <strong>${item.cupom}</strong>`
+      : '<strong>Não possui cupom de desconto</strong>';
     const botaoCupom = possuiCupomReal
       ? `<button type="button" class="copiar-cupom" data-cupom="${item.cupom}">${obterTexto('copy')}</button>`
       : '';
