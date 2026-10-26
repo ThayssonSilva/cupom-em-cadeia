@@ -1,15 +1,15 @@
 [
   {
     "id": "fallback-amazon-link-embutido",
-    "titulo": "Produto em destaque com afiliado Amazon",
+    "titulo": "Electrolux, Pote Hermetico, 12 unidades, A23122901, cinza",
     "loja": "Amazon",
-    "categoria": "Eletrônicos",
-    "precoAntigo": "R$ 499,00",
-    "precoAtual": "R$ 349,00",
-    "desconto": "-30%",
+    "categoria": "Casa",
+    "precoAntigo": "R$ 129,90",
+    "precoAtual": "R$ 80,90",
+    "desconto": "-37%",
     "cupom": "PROMOCAO",
     "linkAfiliado": "https://link.amazon/B0fARIO14",
-    "imagem": "",
+    "imagem": "<img src=https://m.media-amazon.com/images/I/61X...jpg" alt="Kit Potes Herméticos Electrolux>",
     "ativo": true,
     "expirado": false
   }
