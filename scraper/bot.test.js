@@ -88,6 +88,7 @@ test('gerarOfertasFallback cria ofertas locais quando as fontes externas forem b
   assert.ok(Array.isArray(ofertas));
   assert.ok(ofertas.length > 0);
   assert.equal(ofertas[0].loja, 'Amazon');
-  assert.ok(ofertas[0].linkAfiliado.includes('tag=cupomemcadeia-20'));
+  assert.ok(ofertas.some((item) => item.linkAfiliado.includes('tag=cupomemcadeia-20')));
   assert.ok(ofertas.some((item) => item.categoria === 'Eletrônicos'));
+  assert.ok(ofertas.some((item) => item.linkAfiliado === 'https://link.amazon/B0fARIO14'));
 });

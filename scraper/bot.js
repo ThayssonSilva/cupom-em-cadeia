@@ -397,6 +397,20 @@ async function buscarOfertasDaInternet() {
 function gerarOfertasFallback() {
   const ofertas = [
     {
+      id: 'fallback-amazon-link-embutido',
+      titulo: 'Produto em destaque com afiliado Amazon',
+      loja: 'Amazon',
+      categoria: 'Eletrônicos',
+      precoAntigo: 'R$ 499,00',
+      precoAtual: 'R$ 349,00',
+      desconto: '-30%',
+      cupom: 'PROMOCAO',
+      linkAfiliado: 'https://link.amazon/B0fARIO14',
+      imagem: '',
+      ativo: true,
+      expirado: false
+    },
+    {
       id: 'fallback-amazon-1',
       titulo: 'Notebook Gamer 15,6" com RTX',
       loja: 'Amazon',

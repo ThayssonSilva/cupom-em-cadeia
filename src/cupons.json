@@ -1,5 +1,19 @@
 [
   {
+    "id": "fallback-amazon-link-embutido",
+    "titulo": "Produto em destaque com afiliado Amazon",
+    "loja": "Amazon",
+    "categoria": "Eletrônicos",
+    "precoAntigo": "R$ 499,00",
+    "precoAtual": "R$ 349,00",
+    "desconto": "-30%",
+    "cupom": "PROMOCAO",
+    "linkAfiliado": "https://link.amazon/B0fARIO14",
+    "imagem": "",
+    "ativo": true,
+    "expirado": false
+  },
+  {
     "id": "B0FKW184B1",
     "titulo": "Acer Nitro V 15 Notebook Gamer 15.6\" Intel Core i7 RTX 4050 16GB Linux",
     "precoAntigo": "R$ 0,99",
