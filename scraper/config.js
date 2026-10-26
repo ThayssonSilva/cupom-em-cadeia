@@ -1,9 +1,11 @@
+const AMAZON_TAG = 'cupomemcadeia-20';
+
 const affiliateStores = [
   {
     id: 'mercadolivre',
     name: 'Mercado Livre',
     active: true,
-    affiliateTag: 'SEU_ID_MERCADO_LIVRE',
+    affiliateTag: '',
     affiliateParam: 'tag',
     searchQueries: ['notebook gamer', 'celular', 'smart tv'],
     publicUrl: 'https://api.mercadolibre.com/sites/MLB/search?q=notebook+gamer&limit=3',
@@ -13,7 +15,7 @@ const affiliateStores = [
     id: 'amazon',
     name: 'Amazon',
     active: true,
-    affiliateTag: 'SEU_ID_AMAZON-20',
+    affiliateTag: AMAZON_TAG,
     affiliateParam: 'tag',
     searchQueries: ['notebook gamer', 'smart tv', 'fone bluetooth'],
     publicUrl: 'https://www.amazon.com.br/s?k=notebook+gamer',
@@ -23,7 +25,7 @@ const affiliateStores = [
     id: 'shopee',
     name: 'Shopee',
     active: true,
-    affiliateTag: 'SEU_ID_SHOPEE',
+    affiliateTag: '',
     affiliateParam: 'aff_siteid',
     searchQueries: ['notebook gamer', 'smart tv', 'achadinhos'],
     publicUrl: 'https://shopee.com.br/search?keyword=notebook%20gamer',
@@ -33,7 +35,7 @@ const affiliateStores = [
     id: 'magazineluiza',
     name: 'Magazine Luiza',
     active: true,
-    affiliateTag: 'SEU_ID_MAGALU',
+    affiliateTag: '',
     affiliateParam: 'partner_id',
     searchQueries: ['smartphone', 'smart tv', 'eletroportateis'],
     publicUrl: 'https://www.magazineluiza.com.br/',
@@ -43,7 +45,7 @@ const affiliateStores = [
     id: 'casasbahia',
     name: 'Casas Bahia',
     active: true,
-    affiliateTag: 'SEU_ID_CASASBAHIA',
+    affiliateTag: '',
     affiliateParam: 'utm_source',
     searchQueries: ['celular', 'notebook', 'moveis'],
     publicUrl: 'https://www.casasbahia.com.br/',
@@ -53,7 +55,7 @@ const affiliateStores = [
     id: 'aliexpress',
     name: 'AliExpress',
     active: true,
-    affiliateTag: 'SEU_ID_ALIEXPRESS',
+    affiliateTag: '',
     affiliateParam: 'aff_fcid',
     searchQueries: ['gadgets', 'eletronicos', 'achadinhos'],
     publicUrl: 'https://pt.aliexpress.com/',
@@ -75,12 +77,19 @@ function isAffiliateReady(loja) {
 }
 
 function buildAffiliateLink(url, loja) {
-  if (!url || !loja || !loja.affiliateTag || !loja.affiliateParam) {
+  if (!url || !loja || !loja.affiliateParam) {
+    return url;
+  }
+
+  const tag = typeof loja.affiliateTag === 'string' ? loja.affiliateTag.trim() : '';
+  const tagValida = tag && !/^SEU_ID_/i.test(tag) && !/^(SEU ID|TODO|EXEMPLO)/i.test(tag);
+
+  if (!tagValida) {
     return url;
   }
 
   const separador = url.includes('?') ? '&' : '?';
-  return `${url}${separador}${loja.affiliateParam}=${encodeURIComponent(loja.affiliateTag)}`;
+  return `${url}${separador}${loja.affiliateParam}=${encodeURIComponent(tag)}`;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
