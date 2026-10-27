@@ -82,6 +82,25 @@ test('extrairDadosAmazon monta itens a partir do HTML de busca da Amazon', () =>
   assert.ok(itens[0].price > 0);
 });
 
+test('extrairDadosAmazon ignora landing pages e promoções que não são produto real', () => {
+  const html = `
+    <div data-asin="B000GAYQJ0" class="s-result-item">
+      <h2><a href="/credit/application/landing?ref_=dpic_pg_hover">59.621 Análises</a></h2>
+      <span class="a-price-whole">0</span><span class="a-price-fraction">94</span>
+    </div>
+    <div data-asin="B0ABC123" class="s-result-item">
+      <h2><a href="/gp/product/B0ABC123">Notebook Gamer 15,6</a></h2>
+      <span class="a-price-whole">2.899</span><span class="a-price-fraction">99</span>
+    </div>
+  `;
+
+  const itens = extrairDadosAmazon(html);
+
+  assert.equal(itens.length, 1);
+  assert.equal(itens[0].id, 'B0ABC123');
+  assert.equal(itens[0].title, 'Notebook Gamer 15,6');
+});
+
 test('gerarOfertasFallback retorna apenas o produto do link informado', () => {
   const ofertas = gerarOfertasFallback();
 

@@ -3,6 +3,7 @@ const path = require('path');
 const cron = require('node-cron');
 const axios = require('axios');
 const { affiliateStores, demoSources, isAffiliateReady, buildAffiliateLink } = require('./config');
+const { addAmazonAffiliateTag } = require('./amazonAffiliate');
 
 const AMAZON_AFFILIATE = {
   affiliateTag: 'cupomemcadeia-20',
@@ -194,6 +195,49 @@ function extrairPrecoAmazon(snippet = '') {
   return numero;
 }
 
+function aplicarTagAmazonSeNecessaria(url, loja = '') {
+  if (typeof url !== 'string' || !url.trim()) {
+    return url;
+  }
+
+  const valor = url.trim();
+  const nomeLoja = String(loja || '').toLowerCase();
+
+  if (!nomeLoja.includes('amazon') && !/amazon\./i.test(valor)) {
+    return valor;
+  }
+
+  try {
+    return addAmazonAffiliateTag(valor, AMAZON_AFFILIATE.affiliateTag, AMAZON_AFFILIATE.affiliateParam);
+  } catch (error) {
+    return valor;
+  }
+}
+
+function eUrlDeProdutoAmazon(url = '') {
+  if (typeof url !== 'string' || !url.trim()) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(url, 'https://www.amazon.com.br');
+    const hostname = parsed.hostname.toLowerCase();
+    const pathname = parsed.pathname.toLowerCase();
+
+    if (!hostname.includes('amazon.')) {
+      return false;
+    }
+
+    if (pathname.includes('/credit/') || pathname.includes('/application/') || pathname.includes('/gp/bestsellers') || pathname.includes('/s?') || pathname.includes('/s/')) {
+      return false;
+    }
+
+    return /(?:\/dp\/|\/gp\/product\/|\/product\/|\/gp\/aw\/d\/|\/exec\/obidos\/asin\/|\/exec\/obidos\/asins?\/)/i.test(pathname);
+  } catch (error) {
+    return false;
+  }
+}
+
 function extrairDadosAmazon(html = '') {
   if (!html) return [];
 
@@ -219,12 +263,14 @@ function extrairDadosAmazon(html = '') {
     const imagemMatch = trecho.match(/src="(https?:\/\/[^"\s]+\.(?:jpg|jpeg|png|webp|avif)[^"\s]*)"/i);
 
     const titulo = removerTagsHtml(tituloMatch?.[1] || 'Produto Amazon');
-    const link = linkMatch
+    const linkBase = linkMatch
       ? (linkMatch[1].startsWith('http') ? linkMatch[1] : `https://www.amazon.com.br${linkMatch[1]}`)
       : 'https://www.amazon.com.br/s?k=notebook+gamer';
+    const link = aplicarTagAmazonSeNecessaria(linkBase, 'Amazon');
     const precoAtual = extrairPrecoAmazon(trecho);
 
     if (!titulo || titulo.length < 3) continue;
+    if (!eUrlDeProdutoAmazon(link)) continue;
 
     ofertas.push({
       id: asin,
@@ -288,6 +334,7 @@ function normalizarOfertaPublica(item, loja, indice) {
   const categoriaPadrao = inferirCategoria(item, loja, titulo);
   const cupom = extrairCupomValido(item, loja);
   const expirado = Boolean(item?.expired || item?.expirado || item?.isExpired || item?.status === 'expired' || item?.status === 'ended');
+  const linkBase = item?.permalink || item?.url || `https://example.com/${encodeURIComponent(titulo)}`;
 
   return {
     id: item?.id ?? `${loja}-${indice}`,
@@ -298,7 +345,7 @@ function normalizarOfertaPublica(item, loja, indice) {
     cupom,
     loja,
     categoria: categoriaPadrao,
-    linkAfiliado: item?.permalink || item?.url || `https://example.com/${encodeURIComponent(titulo)}`,
+    linkAfiliado: aplicarTagAmazonSeNecessaria(linkBase, loja),
     imagem: item?.image || item?.thumbnail || item?.images?.[0] || '',
     ativo: !expirado,
     expirado
@@ -317,35 +364,35 @@ async function buscarOfertasMercadoLivre(query, loja = 'Mercado Livre') {
 }
 
 function getFontesAtivas() {
-  const lojasAtivas = affiliateStores.filter((loja) => loja.active && loja.publicUrl);
+  const lojaAmazon = affiliateStores.find((loja) => loja.active && loja.id === 'amazon' && loja.publicUrl);
 
-  if (lojasAtivas.length > 0) {
-    return lojasAtivas.flatMap((loja) => {
-      const queries = Array.isArray(loja.searchQueries) && loja.searchQueries.length > 0
-        ? loja.searchQueries
-        : [loja.name];
+  if (lojaAmazon) {
+    const queries = Array.isArray(lojaAmazon.searchQueries) && lojaAmazon.searchQueries.length > 0
+      ? lojaAmazon.searchQueries
+      : [lojaAmazon.name];
 
-      return queries.map((query) => ({
-        url: loja.publicUrl,
-        loja: loja.name,
-        affiliate: loja,
-        query,
-        normalizar: (item, indice) => {
-          const ofertaPublica = normalizarOfertaPublica(item, loja.name, indice);
-          return {
-            ...ofertaPublica,
-            linkAfiliado: buildAffiliateLink(ofertaPublica.linkAfiliado, loja) || ofertaPublica.linkAfiliado
-          };
-        }
-      }));
-    });
+    return queries.map((query) => ({
+      url: lojaAmazon.publicUrl,
+      loja: lojaAmazon.name,
+      affiliate: lojaAmazon,
+      query,
+      normalizar: (item, indice) => {
+        const ofertaPublica = normalizarOfertaPublica(item, lojaAmazon.name, indice);
+        return {
+          ...ofertaPublica,
+          linkAfiliado: aplicarTagAmazonSeNecessaria(ofertaPublica.linkAfiliado, lojaAmazon.name)
+        };
+      }
+    }));
   }
 
-  return demoSources.map((fonte) => ({
-    url: fonte.url,
-    loja: fonte.name,
-    normalizar: (item, indice) => normalizarOfertaPublica(item, fonte.name, indice)
-  }));
+  return demoSources
+    .filter((fonte) => fonte.name === 'Amazon')
+    .map((fonte) => ({
+      url: fonte.url,
+      loja: fonte.name,
+      normalizar: (item, indice) => normalizarOfertaPublica(item, fonte.name, indice)
+    }));
 }
 
 function extrairDadosResposta(resposta) {
