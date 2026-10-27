@@ -1,14 +1,14 @@
 [
   {
-    "id": "fallback-amazon-link-embutido",
+    "id": "amazon-B06X1MH6i",
     "titulo": "Produto em destaque com afiliado Amazon",
     "loja": "Amazon",
     "categoria": "Eletrônicos",
-    "precoAntigo": "R$ 499,00",
-    "precoAtual": "R$ 349,00",
-    "desconto": "-30%",
-    "cupom": "PROMOCAO",
-    "linkAfiliado": "https://link.amazon/B0fARIO14",
+    "precoAntigo": "R$ 599,90",
+    "precoAtual": "R$ 242,25",
+    "desconto": "-59%",
+    "cupom": "WAP15",
+    "linkAfiliado": "https://link.amazon/B06X1MH6i?tag=cupomemcadeia-20",
     "imagem": "",
     "ativo": true,
     "expirado": false
